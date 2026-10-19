@@ -1,0 +1,8 @@
+[package]
+name = "whucs-report"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["GuGuMur"]
+license = "MIT"
+description = "武汉大学计算机学院本科课程设计报告 Typst 模板 / 主题"
+compiler = "0.15.0"
