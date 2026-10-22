@@ -1,5 +1,8 @@
 # 武汉大学计算机学院本科生课程设计报告的 Typst 主题
 
+0.2.0 更新：增加终端风格代码片段、带行号且可跨页的代码清单、代码按章编号与交叉引用、三级目录样式；修复不编号标题可能触发的计数器越界，并调整标题间距及与下文的分页关系。
+
+示例使用姓名、学号和教师占位符，声明页保留空白签名。只收录通用模板能力与示例，不包含个人报告正文、签名、课程项目源码或项目截图。实际使用后公开仓库前，也应检查 PDF 元数据、图片、附件及生成的预览。
 
 
 ## 文件结构
@@ -8,8 +11,9 @@
 .
 ├── lib.typ                 # 主题实现（页面、字体、标题、图表、公式、目录、封面等）
 ├── main.typ                # 完整示例：封面 → 声明 → 摘要 → 目录 → 正文 → 评语页
+├── listings/top.v          # 通用源码示例，可用 read(...) 载入
 ├── refs.bib                # 示例参考文献
-├── assets/                 # 示例图片与武汉大学校徽
+├── assets/                 # 示例图片、武汉大学校徽与代码配色主题
 ├── main.pdf                # 示例编译结果（可直接查看效果）
 ├── preview/                # 封面、正文与评语页预览图
 ├── typst.toml              # Typst 包元数据
@@ -26,6 +30,8 @@ typst compile main.typ
 ## 预览
 
 ![封面](preview/cover.png)
+
+![代码片段与清单](preview/code.png)
 
 ![正文与图表](preview/body.png)
 
@@ -51,9 +57,9 @@ typst compile main.typ
   title: "数字频率计的设计与实现",
   major: "计算机科学与技术",
   course: "数字逻辑与数字电路",
-  supervisor: "张三",
-  student-id: "2023302111001",
-  student-name: "李四",
+  supervisor: "XXX",
+  student-id: "20XXXXXXXXX",
+  student-name: "XXX",
   date: (2025, 7),
 )
 
@@ -87,7 +93,7 @@ typst compile main.typ
     caption: [串行通信字符格式],
   ) <fig-serial>
 
-  如图 @fig-serial 所示……
+  如 @fig-serial 所示……
 
   = 实验设计
 
@@ -167,23 +173,23 @@ typst compile main.typ
 | `body-size` | `12pt` | 正文小四 |
 | `body-leading` | `15.1pt` | 1.5 倍行距对应的额外行距（总基线约 23.4 pt） |
 | `first-line-indent` | `21pt` | 首行缩进（模板实测值） |
-| `par-spacing` | `auto` | 段间距；`auto` 等于 `body-leading`，使段间与行间一致 |
+| `par-spacing` | `18pt` | 段间距；仍可传 `auto`，使段间距等于 `body-leading` |
 | `chapter-size` | `18pt` | 章标题小二号 |
 | `section-size` | `14pt` | 节标题四号 |
 | `subsection-size` | `12pt` | 小节标题小四 |
-| `chapter-above` | `14.4pt` | 章标题段前 0.8 行 |
-| `chapter-below` | `14pt` | 章标题段后（模板为 9pt，这里略增以与正文行距协调） |
-| `section-above` | `12pt` | 节标题段前 |
-| `section-below` | `26pt` | 节标题段后，大于正文行距 |
-| `subsection-above` | `10pt` | 小节标题段前 |
-| `subsection-below` | `26pt` | 小节标题段后，大于正文行距 |
-
-> 不编号的一级标题（结论、参考文献、附录、致谢）后面直接接文字，段后统一为 26 pt；编号章标题后面通常是节标题，由节标题的段前距补足。
+| `chapter-above` | `24pt` | 章标题段前 |
+| `chapter-below` | `16pt` | 章标题段后，编号与不编号标题统一 |
+| `section-above` | `24pt` | 节标题段前 |
+| `section-below` | `12pt` | 节标题段后 |
+| `subsection-above` | `18pt` | 小节标题段前 |
+| `subsection-below` | `12pt` | 小节标题段后 |
 | `heading-pagebreak` | `true` | 一级标题前自动分页 |
 | `caption-size` | `12pt` | 图表题注小四 |
 | `table-size` | `10.5pt` | 表内容五号 |
 | `table-inset` | `(x: 0.5em, y: 0.35em)` | 单元格内边距 |
-| `figure-gap` | `0.6em` | 图表内容与题注间距 |
+| `figure-gap` | `0.6em` | 图表、代码清单内容与题注间距 |
+| `figure-above` | `18pt` | 图表与带题注代码清单的段前距 |
+| `figure-below` | `22pt` | 图表与带题注代码清单的段后距 |
 
 ## 前置/后置页面
 
@@ -237,6 +243,7 @@ typst compile main.typ
 | `title-size` | `18pt` | 标题字号 |
 | `leading-1` | `17.6pt` | 一级条目行距 |
 | `leading-2` | `15.1pt` | 二级条目行距 |
+| `leading-3` | `11pt` | 三级条目行距；三级文字为宋体五号 |
 
 **`references`**
 
@@ -274,7 +281,7 @@ typst compile main.typ
   caption: [串行通信字符格式],
 ) <fig-serial>
 
-如图 @fig-serial 所示。
+如 @fig-serial 所示。
 ```
 
 - 图题在图下方，宋体小四，编号加粗，按章编号（图 1.1、图 2.1……）。
@@ -347,9 +354,49 @@ $ f_s >= 2 f_(max) $ <eq-sample>
 - 编号使用 Times New Roman 粗体。
 - 公式前后请留空行，以按行间公式排版；行内公式直接写在段落中即可。
 
+## 代码片段与完整清单
+
+短命令或短代码使用 `code-block`，默认整块排版：
+
+```typst
+#code-block("typst compile main.typ")
+#code-block("assign ready = enable & valid;", lang: "verilog")
+#code-block(read("listings/top.v"), lang: "verilog", label: [接口片段])
+```
+
+`lang` 默认 `"bash"`，显示灰底终端风格；其他语言使用浅色语法高亮。`label: auto` 根据语言选择标签，`label: none` 隐藏标签。`size` 默认 `8pt`；较长片段可设 `breakable: true`，或改用 `code-listing`。
+
+完整清单使用独立行号栏，长行在代码列内折行，支持跨页：
+
+```typst
+#code-listing(
+  read("listings/top.v"),
+  lang: "verilog",
+  caption: [顶层模块接口],
+) <code-top>
+
+接口定义见 @code-top。
+```
+
+`code-listing` 的 `lang` 默认 `"verilog"`，`size` 默认 `7.6pt`。`caption: none`（默认）只输出代码块，适合附录；传题注后输出按章编号的“代码 2.1”，可加标签交叉引用。图、表和代码清单使用各自独立的计数器，每章重置。两个函数均接受字符串正文与 `fonts` 字体字典；文件路径请在调用处通过 `read(...)` 读取，不依赖固定的 `listings/` 目录。
+
+代码配色在 `assets/report-code.tmTheme` 中，复制模板时请一起保留。直接用 `figure(raw(...), kind: "listing", caption: [...])` 也能获得代码编号与顶部题注；需要跨页时建议使用 `code-listing`。
+
+附录中可使用不编号的二、三级标题，并通过 `toc(depth: 3)` 收录：
+
+```typst
+#appendix[
+  #heading(level: 2, numbering: none)[A　示例源码]
+  #heading(level: 3, numbering: none)[top.v]
+  #code-listing(read("listings/top.v"))
+]
+```
+
+标题会尽量与下文保持同页。段间距及章、节、小节的段前段后距可在 `report(...)` 中覆盖；`par-spacing: auto` 仍保留原来的跟随正文行距行为。
+
 ## 目录与页码
 
-- 目录默认收录一级、二级标题（`depth: 2`），一级为黑体四号，二级为宋体小四，均 1.5 倍行距。
+- `toc` 默认收录一级、二级标题（`depth: 2`），一级为黑体四号，二级为宋体小四。传 `depth: 3` 时，三级为宋体五号；`main.typ` 展示三级目录及逐级缩进。
 - 目录不缩进，与模板一致；如需缩进，可传 `#toc(indent: level => (level - 1) * 2em)`。
 - 默认 `page-numbering: none`，页脚不显示页码，与模板一致；目录中仍显示正文页码（`main-matter` 把正文第一页重置为 1）。
 - 如需页脚页码：
@@ -367,11 +414,11 @@ $ f_s >= 2 f_(max) $ <eq-sample>
 | 纸张 | A4 | A4 |
 | 页边距 | 左右 3.175 cm，上下 2.54 cm | 相同 |
 | 正文 | 宋体小四（12 pt），1.5 倍行距，首行缩进 2 字符 | 12 pt，约 23.4 pt 行距，21 pt 缩进 |
-| 章标题 | 黑体小二号（18 pt）加粗居中，段前 0.8 行、段后 0.5 行 | 字号/对齐相同；段后增至 14 pt，便于与正文拉开距离 |
+| 章标题 | 黑体小二号（18 pt）加粗居中，段前 0.8 行、段后 0.5 行 | 字号/对齐相同；段前 24 pt、段后 16 pt，标题与下文保持同页 |
 | 节标题 | 黑体四号（14 pt）加粗 | 相同 |
 | 小节标题 | 黑体小四（12 pt）加粗 | 相同 |
 | 摘要 | 标题黑体小二号；正文宋体小四，固定 23 pt 行距；关键词黑体小四 | 相同 |
-| 目录 | 标题黑体小二号；章条目黑体四号，其余宋体小四，1.5 倍行距 | 相同 |
+| 目录 | 标题黑体小二号；章条目黑体四号，其余宋体小四，1.5 倍行距 | 一级、二级相同；可选三级为宋体五号 |
 | 图题 | 宋体小四，编号加粗，图下方 | 相同，按章编号 |
 | 表题 | 黑体小四，数字/字母 Times New Roman 粗体，表上方 | 相同，按章编号 |
 | 表内容 | 宋体或 Times New Roman 五号 | 10.5 pt |
@@ -412,3 +459,13 @@ $ f_s >= 2 f_(max) $ <eq-sample>
 ```
 
 宋体/黑体通常只有 Regular 字重。封面和声明标题的“粗体”通过 `stroke` 描边模拟 Word 的伪粗；如果所用字体自带粗体（如 Noto Serif CJK SC Bold），可把 `cover(embolden: 0pt)`、`declaration(embolden: 0pt)` 设为 0。
+
+## 验证模板
+
+需要 Typst 和 Poppler 的 `pdftotext`，使用 Python 标准库运行：
+
+```bash
+python3 tests/check_template.py
+```
+
+回归检查覆盖不编号的深层标题、图表与代码的独立编号和引用、180 行代码跨页及长行换行、标题与下文同页，以及代码语言、标签和字体覆盖。临时编译文件会自动清理。

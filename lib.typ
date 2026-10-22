@@ -5,9 +5,9 @@
 // 本主题依据《数字逻辑与数字电路课程设计报告模板.docx》逐项还原：
 //   * A4，左右 3.175 cm，上下 2.54 cm
 //   * 正文：宋体小四（12 pt），固定 1.5 倍行距，首行缩进 21 pt，两端对齐
-//   * 章标题：黑体小二号（18 pt）加粗居中，段前 0.8 行、段后 0.5 行
+//   * 章标题：黑体小二号（18 pt）加粗居中，段前 24 pt、段后 16 pt
 //   * 节标题：黑体四号（14 pt）加粗；小节标题：黑体小四（12 pt）加粗
-//   * 图表按章编号（图 1.1 / 表 2.1），表题在上、图题在下
+//   * 图表与代码清单按章编号（图 1.1 / 表 2.1 / 代码 2.1），表题在上、图题在下
 //   * 公式按章编号，编号右对齐
 //   * 封面、学术声明、摘要、目录、参考文献、附录、教师评语页
 //
@@ -147,21 +147,23 @@
   body-size: 12pt,
   body-leading: 15.1pt,
   first-line-indent: 21pt,
-  par-spacing: auto,
+  par-spacing: 18pt,
   chapter-size: 18pt,
   section-size: 14pt,
   subsection-size: 12pt,
-  chapter-above: 14.4pt,
-  chapter-below: 14pt,
-  section-above: 12pt,
-  section-below: 26pt,
-  subsection-above: 10pt,
-  subsection-below: 26pt,
+  chapter-above: 24pt,
+  chapter-below: 16pt,
+  section-above: 24pt,
+  section-below: 12pt,
+  subsection-above: 18pt,
+  subsection-below: 12pt,
   heading-pagebreak: true,
   caption-size: 12pt,
   table-size: 10.5pt,
   table-inset: (x: 0.5em, y: 0.35em),
   figure-gap: 0.6em,
+  figure-above: 18pt,
+  figure-below: 22pt,
 ) = {
   let fonts = whucs-fonts + fonts
   let par-spacing = if par-spacing == auto { body-leading } else { par-spacing }
@@ -204,26 +206,28 @@
     let fmt = if it.level == 1 { "1" }
       else if it.level == 2 { "1.1" }
       else { "1.1.1" }
-    let num = numbering(fmt, ..nums.slice(0, it.level))
+    // 不编号的标题（numbering: none）直接跳过编号计算，
+    // 否则层级深于已编号章节时会出现越界。
     let prefix = if it.numbering == none {
       none
     } else {
+      let num = numbering(fmt, ..nums.slice(0, it.level))
       [#num#h(if it.level == 1 { 1em } else { 0.5em })]
     }
 
     if it.level == 1 {
-      // 每章重新开始图、表、公式编号
+      // 每章重新开始图、表、代码清单、公式编号
       counter(figure.where(kind: image)).update(0)
       counter(figure.where(kind: table)).update(0)
+      counter(figure.where(kind: "listing")).update(0)
       counter(math.equation).update(0)
       if heading-pagebreak { pagebreak(weak: true) }
-      // 不编号的一级标题（结论/参考文献/附录/致谢）后面直接是文字，
-      // 留出比正文行距更大的间距；编号章标题后面通常是节标题，由节标题段前距补足。
-      let below = if it.numbering == none { 26pt } else { chapter-below }
-      block(above: chapter-above, below: below, width: 100%)[
+      // 标题与下文形成紧密组块，标题前留出更明显的段落分隔。
+      block(above: chapter-above, below: chapter-below, width: 100%, sticky: true)[
         #set par(
           first-line-indent: 0pt,
-          leading: chapter-size * 1.2,
+          leading: 0.5em,
+          spacing: 0pt,
           justify: false,
         )
         #set align(center)
@@ -232,10 +236,11 @@
         ]
       ]
     } else if it.level == 2 {
-      block(above: section-above, below: section-below, width: 100%)[
+      block(above: section-above, below: section-below, width: 100%, sticky: true)[
         #set par(
           first-line-indent: 0pt,
-          leading: section-size * 1.2,
+          leading: 0.5em,
+          spacing: 0pt,
           justify: false,
         )
         #text(font: fonts.sans, size: section-size, weight: "bold")[
@@ -243,10 +248,11 @@
         ]
       ]
     } else {
-      block(above: subsection-above, below: subsection-below, width: 100%)[
+      block(above: subsection-above, below: subsection-below, width: 100%, sticky: true)[
         #set par(
           first-line-indent: 0pt,
-          leading: subsection-size * 1.2,
+          leading: 0.5em,
+          spacing: 0pt,
           justify: false,
         )
         #text(font: fonts.sans, size: subsection-size, weight: "bold")[
@@ -263,8 +269,13 @@
     gap: figure-gap,
     placement: none,
   )
-  show figure: it => block(above: 1.5em, below: 1.5em, width: 100%)[#it]
+  show figure: it => block(above: figure-above, below: figure-below, width: 100%)[#it]
   show figure.where(kind: table): set figure(supplement: [表])
+
+  // 代码清单：单独编号，按章重排，题注位于清单上方，风格与表题一致。
+  show figure.where(kind: "listing"): set figure(supplement: [代码])
+  show figure.where(kind: "listing"): set figure.caption(position: top)
+  show figure.where(kind: "listing"): set block(breakable: true)
   show figure.where(kind: table): set figure.caption(position: top)
 
   show figure.caption: it => {
@@ -281,7 +292,7 @@
       let chap = if nums.len() > 0 { nums.first() } else { 0 }
       let n = it.counter.at(loc).first()
       let num = numbering("1.1", chap, n)
-      if it.kind == table {
+      if it.kind == table or it.kind == "listing" {
         set text(font: fonts.caption-sans, size: caption-size)
       } else {
         set text(font: fonts.body, size: caption-size)
@@ -330,7 +341,11 @@
         let nums = counter(heading).at(loc)
         let chap = if nums.len() > 0 { nums.first() } else { 0 }
         let n = target.counter.at(loc).first()
-        link(loc, [#target.supplement #chap.#n])
+        if target.kind == "listing" {
+          link(loc, [代码 #chap.#n])
+        } else {
+          link(loc, [#target.supplement #chap.#n])
+        }
       }
     } else if target != none and target.func() == math.equation {
       context {
@@ -362,9 +377,9 @@
 ///   title: "数字频率计的设计与实现",
 ///   major: "计算机科学与技术",
 ///   course: "数字逻辑与数字电路课程设计",
-///   supervisor: "张三",
-///   student-id: "2023302111001",
-///   student-name: "李四",
+///   supervisor: "XXX",
+///   student-id: "20XXXXXXXXX",
+///   student-name: "XXX",
 ///   date: (2025, 7),
 /// )
 /// ```
@@ -601,6 +616,7 @@
   title-size: 18pt,
   leading-1: 17.6pt,
   leading-2: 15.1pt,
+  leading-3: 11pt,
 ) = {
   let fonts = whucs-fonts + fonts
   pagebreak(weak: true)
@@ -630,6 +646,16 @@
   show outline.entry.where(level: 2): set par(
     first-line-indent: 0pt,
     leading: leading-2,
+    justify: false,
+  )
+
+  show outline.entry.where(level: 3): set text(
+    font: fonts.body,
+    size: 10.5pt,
+  )
+  show outline.entry.where(level: 3): set par(
+    first-line-indent: 0pt,
+    leading: leading-3,
     justify: false,
   )
 
@@ -728,6 +754,84 @@
     #parbreak()
     #note
   ]
+}
+
+// -----------------------------------------------------------------------------
+// 代码片段与完整清单
+// -----------------------------------------------------------------------------
+/// 短代码片段。body 为字符串；外部文件请在调用处用 read("path") 读取。
+/// 默认整块排版，长片段可传 breakable: true，或使用 code-listing。
+#let code-block(
+  body,
+  lang: "bash",
+  label: auto,
+  breakable: false,
+  size: 8pt,
+  fonts: whucs-fonts,
+) = {
+  let fonts = whucs-fonts + fonts
+  let code-fonts = fonts.mono + fonts.sans
+  let terminal = lang == "bash"
+  let label = if label == auto {
+    if terminal { "bash" }
+    else if lang == "tcl" { "Tcl 脚本" }
+    else if lang == "verilog" { "Verilog 片段" }
+    else { "代码片段" }
+  } else { label }
+  block(
+    width: 100%, breakable: breakable, above: 12pt, below: 22pt,
+    fill: if terminal { rgb("f3f4f6") } else { rgb("f7f9fc") },
+    stroke: 0.5pt + rgb("d9dfe6"), radius: 3pt,
+    inset: (x: 10pt, y: 9pt),
+  )[
+    #set par(first-line-indent: 0pt, justify: false, leading: 4pt, spacing: 0pt)
+    #show raw: set text(font: code-fonts, size: size, fill: rgb("263443"))
+    #show raw.where(block: true): set par(leading: 4pt, spacing: 0pt, first-line-indent: 0pt)
+    #if label != none {
+      block(below: 7pt, text(font: fonts.sans, size: size, fill: rgb("637080"), label))
+    }
+    #raw(body, lang: lang, block: true,
+      theme: if terminal { none } else { "assets/report-code.tmTheme" })
+  ]
+}
+
+/// 带独立行号栏的完整代码，长行在代码列内折行，允许连续跨页。
+/// caption 不为空时生成 kind: "listing" 的 figure，可加标签并交叉引用。
+#let code-listing(
+  body,
+  lang: "verilog",
+  caption: none,
+  size: 7.6pt,
+  fonts: whucs-fonts,
+) = {
+  let fonts = whucs-fonts + fonts
+  let code-fonts = fonts.mono + fonts.sans
+  let content = block(
+    width: 100%, breakable: true, above: 8pt, below: 18pt,
+    fill: rgb("f8fafc"),
+    stroke: (left: 1.5pt + rgb("a8b7c7")),
+    inset: (left: 6pt, right: 6pt, top: 8pt, bottom: 8pt),
+  )[
+    #set par(first-line-indent: 0pt, justify: false, leading: 0pt, spacing: 0pt)
+    #show raw: set text(font: code-fonts, size: size)
+    #show raw.where(block: true): set par(leading: 0pt, spacing: 0pt, first-line-indent: 0pt)
+    #show raw.line: line => {
+      set text(font: code-fonts, size: size, top-edge: "cap-height", bottom-edge: "baseline")
+      set par(leading: 3pt, spacing: 0pt)
+      grid(
+        columns: (20pt, 1fr), column-gutter: 7pt,
+        align: (right + top, left + top),
+        text(font: code-fonts, size: size * 0.895, fill: rgb("84909d"))[#line.number],
+        line.body,
+      )
+    }
+    #raw(body.trim("\n"), lang: lang, block: true, theme: "assets/report-code.tmTheme")
+  ]
+  if caption == none {
+    content
+  } else {
+    figure(content, kind: "listing", caption: caption)
+  }
 }
 
 // -----------------------------------------------------------------------------

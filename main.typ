@@ -39,6 +39,7 @@
 // -----------------------------------------------------------------------------
 #declaration(
   // signature: "XXX",
+  // 手写签名可传 image(...)；公开模板请保持空白，勿提交个人签名图片。
   // date: "2025 年 7 月",
 )
 
@@ -56,7 +57,7 @@
 // -----------------------------------------------------------------------------
 // 目录
 // -----------------------------------------------------------------------------
-#toc()
+#toc(depth: 3, indent: level => (level - 1) * 1em)
 
 // -----------------------------------------------------------------------------
 // 正文
@@ -80,6 +81,17 @@
 
   掌握 XXXX 的设计方法，并能够使用仿真工具对设计结果进行验证。
 
+  以下命令演示如何编译报告。短命令使用终端样式，完整源码使用带行号的代码清单。
+
+  #code-block("typst compile main.typ")
+
+  #code-listing(
+    "assign ready = enable & valid;",
+    caption: [组合逻辑示例],
+  ) <code-ready>
+
+  @code-ready 给出了使能与有效信号的组合逻辑。
+
   == 实验意义
 
   本实验将课堂讲授的组合逻辑、时序逻辑、状态机等知识应用于一个完整的工程对象，有助于建立“需求—设计—仿真—验证”的系统化思维，为后续 XXXX 课程的学习打下基础。
@@ -89,6 +101,10 @@
   == 概述
 
   本设计采用自顶向下的方法，将系统划分为 XXXX、XXXX 与 XXXX 三个功能模块。各模块之间通过 XXXX 信号连接，顶层模块负责时钟、复位与外部接口管理。
+
+  @code-top 演示从文件读取代码；新章节中的清单从 1 重新编号。
+
+  #code-listing(read("listings/top.v"), caption: [顶层模块接口]) <code-top>
 
   == 实验原理
 
@@ -173,16 +189,11 @@
   #appendix[
     本附录给出顶层模块的接口定义，供调试与二次开发参考。
 
-    ```verilog
-    module top (
-      input  wire clk,
-      input  wire rst_n,
-      input  wire din,
-      output wire dout
-    );
-      // TODO: 在此实例化各功能子模块
-    endmodule
-    ```
+    #heading(level: 2, numbering: none)[A　示例源码]
+
+    #heading(level: 3, numbering: none)[top.v]
+
+    #code-listing(read("listings/top.v"))
   ]
 
   #acknowledgements[
